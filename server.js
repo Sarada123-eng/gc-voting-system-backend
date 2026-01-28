@@ -7,18 +7,14 @@ const voteRoutes = require("./routes/vote");
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-const corsOptions = {
-  origin: [
-    "http://localhost:5173",
-    "https://gc-voting.vercel.app",
-  ],
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
-};
-
-app.use(cors(corsOptions));
-
-app.options("/api/*", cors(corsOptions));
+app.use(
+  cors({
+    origin: true, 
+    credentials: true,
+    allowedHeaders: ["Content-Type", "Authorization"],
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  })
+);
 
 app.use(express.json());
 
@@ -26,6 +22,7 @@ app.get("/", (req, res) => {
   res.send("GC Voting Backend Running");
 });
 
+// Routes
 app.use("/api/auth", authRoutes);
 app.use("/api", voteRoutes);
 
