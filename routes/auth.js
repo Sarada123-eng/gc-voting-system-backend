@@ -1,0 +1,85 @@
+const express = require("express");
+const bcrypt = require("bcryptjs");
+const prisma = require("../prismaClient");
+const jwt = require("jsonwebtoken");
+
+const router = express.Router();
+
+router.post("/signup", async (req, res) => {
+  const { email, password, branch } = req.body;
+
+  if (!email || !password || !branch) {
+    return res.status(400).json({ message: "All fields are required" });
+  }
+
+  const emailLower = email.toLowerCase();
+  
+  if (!emailLower.endsWith("@iitbbs.ac.in")) {
+    return res.status(400).json({
+      message: "Email must be an IIT Bhubaneswar email ID"
+    });
+  }
+
+  try {
+    const existing = await prisma.student.findUnique({
+      where: { email }
+    });
+
+    if (existing) {
+      return res.status(400).json({ message: "Student already exists" });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    await prisma.student.create({
+      data: {
+        email,
+        password: hashedPassword,
+        branch
+      }
+    });
+
+    res.status(201).json({ message: "Signup successful" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Signup failed" });
+  }
+});
+
+// ---------- LOGIN ----------
+router.post("/login", async (req, res) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    return res.status(400).json({ message: "All fields are required" });
+  }
+
+  try {
+    const student = await prisma.student.findUnique({
+      where: { email }
+    });
+
+    if (!student) {
+      return res.status(400).json({ message: "Invalid credentials" });
+    }
+
+    const isMatch = await bcrypt.compare(password, student.password);
+
+    if (!isMatch) {
+      return res.status(400).json({ message: "Invalid credentials" });
+    }
+
+    const token = jwt.sign(
+      { id: student.id },
+      process.env.JWT_SECRET || "dev_secret_key",
+      { expiresIn: "1d" }
+    );
+
+    res.json({ token });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Login failed" });
+  }
+});
+
+module.exports = router;
