@@ -7,7 +7,6 @@ const voteRoutes = require("./routes/vote");
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-
 app.use(
   cors({
     origin: [
@@ -19,15 +18,11 @@ app.use(
   })
 );
 
-
-app.options("*", cors());
-
 app.use(express.json());
 
 app.get("/", (req, res) => {
   res.send("GC Voting Backend Running");
 });
-
 
 app.use("/api/auth", authRoutes);
 app.use("/api", voteRoutes);
