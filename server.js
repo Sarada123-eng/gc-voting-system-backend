@@ -11,7 +11,7 @@ app.use(
   cors({
     origin: [
       "http://localhost:5173",
-      "https://gc-voting.vercel.app",
+      "https://gc-voting.onrender.com",
     ],
     credentials: true,
   })
