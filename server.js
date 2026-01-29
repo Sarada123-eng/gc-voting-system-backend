@@ -9,10 +9,11 @@ const PORT = process.env.PORT || 3000;
 
 app.use(
   cors({
-    origin: true, 
+    origin: [
+      "http://localhost:5173",
+      "https://gc-voting.vercel.app",
+    ],
     credentials: true,
-    allowedHeaders: ["Content-Type", "Authorization"],
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   })
 );
 
@@ -22,7 +23,6 @@ app.get("/", (req, res) => {
   res.send("GC Voting Backend Running");
 });
 
-// Routes
 app.use("/api/auth", authRoutes);
 app.use("/api", voteRoutes);
 
