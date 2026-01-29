@@ -11,7 +11,7 @@ app.use(
   cors({
     origin: [
       "http://localhost:5173",
-      "https://gc-voting.onrender.com",
+      "https://gc-voting-system-backend-1.onrender.com",
     ],
     credentials: true,
   })
