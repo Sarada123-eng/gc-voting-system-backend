@@ -4,9 +4,6 @@ const authMiddleware = require("../middleware/authMiddleware");
 
 const router = express.Router();
 
-/**
- * Get coordinators for logged-in student's branch
- */
 router.get("/coordinators", authMiddleware, async (req, res) => {
   try {
     const student = await prisma.student.findUnique({
@@ -33,9 +30,6 @@ router.get("/coordinators", authMiddleware, async (req, res) => {
   }
 });
 
-/**
- * Vote for a coordinator
- */
 router.post("/vote/:coordinatorId", authMiddleware, async (req, res) => {
   const coordinatorId = parseInt(req.params.coordinatorId);
 
@@ -66,7 +60,6 @@ router.post("/vote/:coordinatorId", authMiddleware, async (req, res) => {
         throw new Error("INVALID_BRANCH");
       }
 
-      // ✅ CREATE VOTE (RELATIONAL, CORRECT)
       await tx.vote.create({
         data: {
           studentId: student.id,
@@ -74,7 +67,6 @@ router.post("/vote/:coordinatorId", authMiddleware, async (req, res) => {
         }
       });
 
-      // 🔒 Lock student after voting
       await tx.student.update({
         where: { id: student.id },
         data: { hasVoted: true }

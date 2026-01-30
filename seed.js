@@ -2,40 +2,45 @@ const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
 async function main() {
-  const coordinators = [
-    // Civil
-    { name: "Alice Civil", branch: "Civil" },
-    { name: "Bob Civil", branch: "Civil" },
+  await prisma.coordinator.createMany({
+    data: [
+      // Civil
+      { name: "Aman Civil", branch: "Civil" },
+      { name: "Riya Civil", branch: "Civil" },
 
-    // Computer Science
-    { name: "Charlie CS", branch: "Computer Science" },
-    { name: "Dave CS", branch: "Computer Science" },
+      // Computer Science
+      { name: "Rahul CS", branch: "Computer Science" },
+      { name: "Sneha CS", branch: "Computer Science" },
 
-    // Mechanical
-    { name: "Eve ME", branch: "Mechanical" },
+      // Mechanical
+      { name: "Kunal ME", branch: "Mechanical" },
+      { name: "Pooja ME", branch: "Mechanical" },
 
-    // Electrical
-    { name: "Frank EE", branch: "Electrical" }
-  ];
+      // Electrical
+      { name: "Arjun EE", branch: "Electrical" },
+      { name: "Neha EE", branch: "Electrical" },
 
-  for (const coord of coordinators) {
-    await prisma.coordinator.upsert({
-      where: {
-        // create a composite unique later if you want,
-        // for now we match by name + branch manually
-        id: -1
-      },
-      create: coord,
-      update: {}
-    });
-  }
+      // ECE + Meta + EP
+      { name: "Vikas ECE", branch: "ECE+Meta+EP" },
+      { name: "Ananya ECE", branch: "ECE+Meta+EP" },
 
-  console.log("✅ Coordinators seeded");
+      // M.Sc. + ITEP
+      { name: "Saurav MSc", branch: "M.Sc. + ITEP" },
+      { name: "Isha MSc", branch: "M.Sc. + ITEP" },
+
+      // PhD
+      { name: "Dr. Raj PhD", branch: "PhD" },
+      { name: "Dr. Meera PhD", branch: "PhD" },
+    ],
+    skipDuplicates: true,
+  });
+
+  console.log("✅ Coordinators seeded successfully");
 }
 
 main()
-  .catch(e => {
-    console.error(e);
+  .catch((e) => {
+    console.error("❌ Seeding error:", e);
     process.exit(1);
   })
   .finally(async () => {
