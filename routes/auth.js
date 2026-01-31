@@ -72,7 +72,7 @@ router.post("/set-branch", authMiddleware, async (req, res) => {
 
   try {
     await prisma.student.update({
-      where: { id: req.user.id },
+      where: { id: req.studentId },
       data: { branch },
     });
 
