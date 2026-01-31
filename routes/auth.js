@@ -12,8 +12,7 @@ const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 const ADMIN_EMAILS = [
   "admin@iitbbs.ac.in",
   "webnd@iitbbs.ac.in",
-  "gcadmin@iitbbs.ac.in",
-  "24ce01084@iitbbs.ac.in"
+  "gcadmin@iitbbs.ac.in"
 ];
 
 
