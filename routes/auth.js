@@ -9,6 +9,14 @@ const router = express.Router();
 
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
+const ADMIN_EMAILS = [
+  "admin@iitbbs.ac.in",
+  "webnd@iitbbs.ac.in",
+  "gcadmin@iitbbs.ac.in",
+  "24ce01084@iitbbs.ac.in"
+];
+
+
 /* ---------------- GOOGLE LOGIN ---------------- */
 router.post("/google", async (req, res) => {
   const { token } = req.body;
@@ -32,12 +40,14 @@ router.post("/google", async (req, res) => {
       });
     }
 
+    const isAdmin = ADMIN_EMAILS.includes(email);
+
     let student = await prisma.student.findUnique({
       where: { email },
     });
 
     // If first-time Google login → auto-create user
-    if (!student) {
+    if (!student && !isAdmin) {
       student = await prisma.student.create({
         data: {
           email,
@@ -48,14 +58,19 @@ router.post("/google", async (req, res) => {
     }
 
     const jwtToken = jwt.sign(
-      { id: student.id },
+      {
+        id:student?.id || null,
+        email,
+        role: isAdmin ? "admin" : "student"
+      },
       process.env.JWT_SECRET,
       { expiresIn: "1d" }
     );
 
     res.json({
   token: jwtToken,
-  branch: student.branch,
+  branch: student ? student.branch : null,
+  role: isAdmin ? "admin" : "student"
 });
   } catch (err) {
     console.error(err);
