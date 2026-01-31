@@ -86,7 +86,7 @@ router.post("/set-branch", authMiddleware, async (req, res) => {
 router.get("/me", authMiddleware, async (req, res) => {
   try {
     const student = await prisma.student.findUnique({
-      where: { id: req.user.id },
+      where: { id: req.studentId },
       select: {
         branch: true,
         hasVoted: true,
