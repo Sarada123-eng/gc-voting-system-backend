@@ -4,23 +4,35 @@ const authMiddleware = require("../middleware/authMiddleware");
 
 const router = express.Router();
 
+/* ---------- GET COORDINATORS (BRANCH-SPECIFIC) ---------- */
 router.get("/coordinators", authMiddleware, async (req, res) => {
   try {
     const student = await prisma.student.findUnique({
-      where: { id: req.studentId }
+      where: { id: req.studentId },
+      select: {
+        branch: true,
+      },
     });
 
     if (!student) {
       return res.status(404).json({ message: "Student not found" });
     }
 
+    // 🔒 Branch must be selected before voting
+    if (!student.branch || student.branch === "Unknown") {
+      return res.status(400).json({
+        message: "Branch not selected",
+        requiresBranchSelection: true,
+      });
+    }
+
     const coordinators = await prisma.coordinator.findMany({
       where: { branch: student.branch },
       include: {
         _count: {
-          select: { votes: true }
-        }
-      }
+          select: { votes: true },
+        },
+      },
     });
 
     res.json(coordinators);
@@ -30,18 +42,22 @@ router.get("/coordinators", authMiddleware, async (req, res) => {
   }
 });
 
+/* ---------- CAST VOTE ---------- */
 router.post("/vote/:coordinatorId", authMiddleware, async (req, res) => {
   const coordinatorId = parseInt(req.params.coordinatorId);
 
   try {
     await prisma.$transaction(async (tx) => {
-
       const student = await tx.student.findUnique({
-        where: { id: req.studentId }
+        where: { id: req.studentId },
       });
 
       if (!student) {
         throw new Error("STUDENT_NOT_FOUND");
+      }
+
+      if (!student.branch || student.branch === "Unknown") {
+        throw new Error("BRANCH_NOT_SELECTED");
       }
 
       if (student.hasVoted) {
@@ -49,13 +65,14 @@ router.post("/vote/:coordinatorId", authMiddleware, async (req, res) => {
       }
 
       const coordinator = await tx.coordinator.findUnique({
-        where: { id: coordinatorId }
+        where: { id: coordinatorId },
       });
 
       if (!coordinator) {
         throw new Error("COORDINATOR_NOT_FOUND");
       }
 
+      // 🔒 Absolute safety: branch mismatch check
       if (coordinator.branch !== student.branch) {
         throw new Error("INVALID_BRANCH");
       }
@@ -63,18 +80,17 @@ router.post("/vote/:coordinatorId", authMiddleware, async (req, res) => {
       await tx.vote.create({
         data: {
           studentId: student.id,
-          coordinatorId
-        }
+          coordinatorId,
+        },
       });
 
       await tx.student.update({
         where: { id: student.id },
-        data: { hasVoted: true }
+        data: { hasVoted: true },
       });
     });
 
     res.json({ message: "Vote cast successfully" });
-
   } catch (err) {
     if (err.message === "ALREADY_VOTED") {
       return res.status(400).json({ message: "You have already voted" });
@@ -92,10 +108,16 @@ router.post("/vote/:coordinatorId", authMiddleware, async (req, res) => {
       return res.status(404).json({ message: "Coordinator not found" });
     }
 
+    if (err.message === "BRANCH_NOT_SELECTED") {
+      return res.status(400).json({
+        message: "Please select your branch before voting",
+        requiresBranchSelection: true,
+      });
+    }
+
     console.error(err);
     res.status(500).json({
       message: "Voting failed",
-      status: err.message
     });
   }
 });

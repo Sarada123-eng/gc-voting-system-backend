@@ -52,10 +52,50 @@ router.post("/google", async (req, res) => {
       { expiresIn: "1d" }
     );
 
-    res.json({ token: jwtToken });
+    res.json({
+  token: jwtToken,
+  branch: student.branch,
+});
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Google authentication failed" });
+  }
+});
+
+router.post("/set-branch", authMiddleware, async (req, res) => {
+  const { branch } = req.body;
+
+  if (!branch) {
+    return res.status(400).json({ message: "Branch is required" });
+  }
+
+  try {
+    await prisma.student.update({
+      where: { id: req.user.id },
+      data: { branch },
+    });
+
+    res.json({ message: "Branch updated successfully" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Failed to set branch" });
+  }
+});
+
+router.get("/me", authMiddleware, async (req, res) => {
+  try {
+    const student = await prisma.student.findUnique({
+      where: { id: req.user.id },
+      select: {
+        branch: true,
+        hasVoted: true,
+      },
+    });
+
+    res.json(student);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Failed to fetch user" });
   }
 });
 
