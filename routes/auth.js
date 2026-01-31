@@ -3,6 +3,7 @@ const bcrypt = require("bcryptjs");
 const prisma = require("../prismaClient");
 const jwt = require("jsonwebtoken");
 const { OAuth2Client } = require("google-auth-library");
+const authMiddleware = require("../middleware/authMiddleware");
 
 const router = express.Router();
 
